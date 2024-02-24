@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <title>Juego de banderas</title>
+    <link href="./style.css" type="text/css" rel="stylesheet">
+    <!-- <script src="index2.js"></script> -->
+    <!-- <script type="text/javascript" src="./script.js"></script> -->
+</head>
+<body>
+    <header>
+        <h1>Adivina el país</h1>
+        <!-- <button id="iniciar" onclick="juego()">Pulsa para jugar</button> -->
+    </header>
+    <nav>
+
+        <article>
+        <div class="container-juego">
+            <h3>Elige el país de la bandera</h3>
+            <div class="puntuaciones">
+                <div>Puntuación: <span id="puntuacion">0</span></div>
+                <div>Best Score: <span id="best-score">0</span></div>
+            </div>
+            <img id="bandera" src="" alt="Bandera">
+            <div id="opciones" class="menu-opciones">
+                <button id="idPais1" class="opcion"></button><br><br>
+                <button id="idPais2" class="opcion"></button><br><br>
+                <button id="idPais3" class="opcion"></button><br><br>
+                <button id="idPais4" class="opcion"></button><br><br>
+
+            </div>
+            <div id="DivFinJuego" class="aviso">
+                <div class="contenido-aviso">
+                    <p id="textoFinJuego"></p>
+                    <button id="volverAJugar">Volver a jugar</button>
+                </div>
+            </div>
+        </div>
+        </article>
+    </nav>
+
+    <footer>
+        <button id="reset">Nuevo Juego</button>
+    </footer>
+
+    <script>
+        let puntuacion = 0;
+        let bestScore = localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0;   
+        document.getElementById('best-score').textContent = bestScore;
+
+        let rondas = 0;
+        let numPaises = 4;
+        const botonInicio = document.getElementById('iniciar');
+
+
+        const juego = function(){
+            // let bestScore = localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0;        
+
+            fetch('https://restcountries.com/v3.1/all')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                    }
+                    data = response.json();
+
+                    return data
+            })
+            .then(data => {
+                //Selección de los 4 países que van a ser las opciones
+                const lenData = Object.keys(data).length;
+                dataArray = Object.entries(data);
+
+                // const numRandom1 = Math.floor(Math.random() * 250);
+                // const numRandom2 = Math.floor(Math.random() * 250);
+                // const numRandom3 = Math.floor(Math.random() * 250);
+                // const numRandom4 = Math.floor(Math.random() * 250);
+
+                // pais1 = dataArray[numRandom1];
+                // pais2 = dataArray[numRandom2];
+                // pais3 = dataArray[numRandom3];
+                // pais4 = dataArray[numRandom4];
+
+                // nombrePais1 = pais1[1].name.common;
+                // nombrePais2 = pais2[1].name.common;
+                // nombrePais3 = pais3[1].name.common;
+                // nombrePais4 = pais4[1].name.common;
+                for (let i = dataArray.length - 1; i > 0; i--) {
+                    // if (i = dataArray.length - 1){
+                    //     const arrayPaises = dataArray[i];
+                    // }
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [dataArray[i], dataArray[j]] = [dataArray[j], dataArray[i]]; // Swap elements
+                    // arrayPaises.push(dataArray[i]);
+                }
+
+                const paisesSeleccionados = dataArray.slice(0, 4);
+
+                // document.getElementById('idPais1').textContent = paisesSeleccionados[0][1].name.common;
+                // document.getElementById('idPais2').textContent = paisesSeleccionados[1][1].name.common;
+                // document.getElementById('idPais3').textContent = paisesSeleccionados[2][1].name.common;
+                // document.getElementById('idPais4').textContent = paisesSeleccionados[3][1].name.common;
+                
+                //Genero la respuesta correcta
+                const numCorrecto = Math.floor(Math.random() * 4);
+                document.getElementById('bandera').src = paisesSeleccionados[numCorrecto][1].flags.png;
+                
+                const opciones = document.querySelectorAll('.opcion');
+
+                opciones.forEach((opcion, i) => {
+                opcion.textContent = paisesSeleccionados[i][1].name.common;
+                opcion.onclick = () => {
+                    actualizarPuntuacion(i == numCorrecto);
+                };
+                }); 
+
+            })
+            }
+
+            const actualizarPuntuacion = function(punto){ //Punto es true si la respuesta ha sido correcta y false si no
+                if (punto){
+                    puntuacion += 1;
+                    document.getElementById('puntuacion').textContent = puntuacion;
+                }
+
+                if (puntuacion > bestScore){
+                    bestScore=puntuacion;
+                    document.getElementById('best-score').textContent = puntuacion;
+                    localStorage.setItem('bestScore', bestScore.toString());
+
+                }
+
+                rondas += 1;
+                if (rondas < 10){
+                    juego();
+                } else{
+                    // const mensaje = `¡Fin del juego! Tu puntuación es: ${puntuacion} /10`;
+                    // const mensaje ='¡Fin del juego! Tu puntuación es: ' + puntuacion.toString() + ' /10';
+                    const mensaje = 'Fin del juego';
+                    document.getElementById('textoFinJuego').textContent = mensaje;
+
+                    puntuacion = 0;
+                    document.getElementById('puntuacion').textContent = puntuacion;
+                    rondas = 0;
+                    const avisoFinJuego = document.getElementById('DivFinJuego');
+                    avisoFinJuego.style.display = 'block';
+                    
+                    const botonNuevaPartida = document.getElementById('volverAJugar');
+                    botonNuevaPartida.addEventListener('click',function(){
+                        avisoFinJuego.style.display = 'none';
+                        juego();
+
+                    // //Cerrar aviso si se pulsa en otro sitio de la ventana
+                    // window.addEventListener('click', function(event){
+                    //     if(event.target != avisoFinJuego){
+                    //         avisoFinJuego.style.display='none';
+                    //     }
+                    // })
+                    })
+                }
+            }
+            window.addEventListener('load',juego());
+
+    </script>
+</body>
+
+</html>
